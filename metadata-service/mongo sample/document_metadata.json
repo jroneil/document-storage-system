@@ -1,0 +1,9 @@
+{
+    "document_id": "uuid-from-postgresql",
+    "available_countries": ["US", "CA", "GB"], // List of country codes (ISO 3166-1 alpha-2)
+    "languages": ["en", "fr", "es"], // List of language codes (ISO 639-1)
+    "brand_colors": ["#FF0000", "#00FF00"], // Brand-specific colors
+    "brand_logo_path": "/path/to/logo.png", // Path to the brand logo
+    "campaign_name": "Summer Sale 2023", // Campaign name (if applicable)
+    "product_line": "Electronics" // Product line (if applicable)
+}

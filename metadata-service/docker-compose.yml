@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  ingestion-service:
+    build: ./ingestion-service
+    ports:
+      - "5000:5000"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - METADATA_SERVICE_URL=http://metadata-service:5001
+    depends_on:
+      - rabbitmq
+      - metadata-service
+
+  metadata-service:
+    build: ./metadata-service
+    ports:
+      - "5001:5001"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - MONGODB_URI=mongodb://mongo:27017/
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=document_storage
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+    depends_on:
+      - rabbitmq
+      - postgres
+      - mongo
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: document_storage
+
+  mongo:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"

@@ -1,0 +1,9 @@
+# Dockerfile.mongo
+FROM mongo:5.0
+
+# Set environment variables for MongoDB
+ENV MONGO_INITDB_ROOT_USERNAME=admin
+ENV MONGO_INITDB_ROOT_PASSWORD=admin
+
+# Expose MongoDB port
+EXPOSE 27017

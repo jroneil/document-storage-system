@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - INGESTION_SERVICE_URL=http://ingestion-service:5001
+      - METADATA_SERVICE_URL=http://metadata-service:5002
+      - STORAGE_SERVICE_URL=http://storage-service:5003
+      - PROCESSING_SERVICE_URL=http://processing-service:5004
+      - SEARCH_SERVICE_URL=http://search-service:5005
+      - AI_SERVICE_URL=http://ai-service:5006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5007
+    depends_on:
+      - ingestion-service
+      - metadata-service
+      - storage-service
+      - processing-service
+      - search-service
+      - ai-service
+      - notification-service
+
+  # Ingestion Service
+  ingestion-service:
+    build: ./ingestion-service
+    ports:
+      - "5001:5001"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - METADATA_SERVICE_URL=http://metadata-service:5002
+    depends_on:
+      - rabbitmq
+      - metadata-service
+
+  # Metadata Service
+  metadata-service:
+    build: ./metadata-service
+    ports:
+      - "5002:5002"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=document_storage
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - MONGO_HOST=mongo
+      - MONGO_DB=metadata_db
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - postgres
+      - mongo
+      - rabbitmq
+
+  # Storage Service
+  storage-service:
+    build: ./storage-service
+    ports:
+      - "5003:5003"
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=documents
+    depends_on:
+      - minio
+
+  # Processing Service
+  processing-service:
+    build: ./processing-service
+    ports:
+      - "5004:5004"
+    depends_on:
+      - storage-service
+
+  # Search Service
+  search-service:
+    build: ./search-service
+    ports:
+      - "5005:5005"
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+    depends_on:
+      - elasticsearch
+
+  # AI Service
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "5006:5006"
+    depends_on:
+      - metadata-service
+
+  # Notification Service
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "5007:5007"
+    environment:
+      - SMTP_HOST=smtp
+      - SMTP_PORT=1025
+      - SMTP_USER=user
+      - SMTP_PASSWORD=password
+    depends_on:
+      - smtp
+
+  # Databases
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: document_storage
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  elasticsearch:
+    image: elasticsearch:7.10.1
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  # Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # Object Storage (MinIO)
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+  # SMTP Server (for testing notifications)
+  smtp:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:
+  mongo_data:
+  elasticsearch_data:
+  rabbitmq_data:
+  minio_data:

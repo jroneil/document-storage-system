@@ -1,0 +1,11 @@
+package com.example;
+
+public class FileMetadata {
+    private String documentId;
+    private String fileType;
+    private long fileSize;
+    private String filename;
+    // Add other metadata fields as needed
+
+    // Getters and Setters
+}

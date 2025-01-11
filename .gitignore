@@ -1,0 +1,20 @@
+# Ignore Python virtual environment
+venv/
+.env
+
+# Ignore Docker volumes
+**/data/
+
+# Ignore IDE-specific files
+.idea/
+.vscode/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore logs and temporary files
+*.log
+*.tmp
