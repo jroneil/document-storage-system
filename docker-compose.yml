@@ -114,6 +114,8 @@ services:
     build: ./ai-service
     ports:
       - "5006:5006"
+    volumes:
+      - ./ai-service:/app
     depends_on:
       - metadata-service
     networks:

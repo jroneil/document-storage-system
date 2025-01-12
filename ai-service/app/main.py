@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from services.content_analysis import analyze_content
+from app.services.content_analysis import analyze_content
 
 app = FastAPI()
 
