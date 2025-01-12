@@ -1,0 +1,24 @@
+{
+  "document_types": [
+    "Policy",
+    "Procedure",
+    "Report",
+    "Contract",
+    "Agreement",
+    "Specification",
+    "Manual",
+    "Guide",
+    "Presentation",
+    "Spreadsheet",
+    "Form",
+    "Template",
+    "White Paper",
+    "Case Study",
+    "Technical Drawing",
+    "Diagram",
+    "Flowchart",
+    "Code Documentation",
+    "API Specification",
+    "Release Notes"
+  ]
+}

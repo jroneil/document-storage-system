@@ -1,0 +1,99 @@
+{
+  "countries": [
+    {
+      "name": "United States",
+      "languages": [
+        {"code": "en", "name": "English"}
+      ]
+    },
+    {
+      "name": "Canada",
+      "languages": [
+        {"code": "en", "name": "English"},
+        {"code": "fr", "name": "French"}
+      ]
+    },
+    {
+      "name": "Mexico",
+      "languages": [
+        {"code": "es", "name": "Spanish"}
+      ]
+    },
+    {
+      "name": "United Kingdom",
+      "languages": [
+        {"code": "en", "name": "English"}
+      ]
+    },
+    {
+      "name": "Germany",
+      "languages": [
+        {"code": "de", "name": "German"}
+      ]
+    },
+    {
+      "name": "France",
+      "languages": [
+        {"code": "fr", "name": "French"}
+      ]
+    },
+    {
+      "name": "China",
+      "languages": [
+        {"code": "zh", "name": "Chinese"}
+      ]
+    },
+    {
+      "name": "Japan",
+      "languages": [
+        {"code": "ja", "name": "Japanese"}
+      ]
+    },
+    {
+      "name": "India",
+      "languages": [
+        {"code": "hi", "name": "Hindi"},
+        {"code": "en", "name": "English"}
+      ]
+    },
+    {
+      "name": "Australia",
+      "languages": [
+        {"code": "en", "name": "English"}
+      ]
+    },
+    {
+      "name": "South Korea",
+      "languages": [
+        {"code": "ko", "name": "Korean"}
+      ]
+    },
+    {
+      "name": "United Arab Emirates",
+      "languages": [
+        {"code": "ar", "name": "Arabic"},
+        {"code": "en", "name": "English"}
+      ]
+    },
+    {
+      "name": "South Africa",
+      "languages": [
+        {"code": "en", "name": "English"},
+        {"code": "af", "name": "Afrikaans"},
+        {"code": "zu", "name": "Zulu"}
+      ]
+    },
+    {
+      "name": "Brazil",
+      "languages": [
+        {"code": "pt", "name": "Portuguese"}
+      ]
+    },
+    {
+      "name": "Argentina",
+      "languages": [
+        {"code": "es", "name": "Spanish"}
+      ]
+    }
+  ]
+}

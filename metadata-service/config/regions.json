@@ -1,0 +1,24 @@
+{
+  "regions": [
+    {
+      "name": "North America",
+      "countries": ["United States", "Canada", "Mexico"]
+    },
+    {
+      "name": "Europe",
+      "countries": ["United Kingdom", "Germany", "France", "Spain", "Italy"]
+    },
+    {
+      "name": "Asia Pacific",
+      "countries": ["China", "Japan", "India", "Australia", "South Korea"]
+    },
+    {
+      "name": "Middle East & Africa",
+      "countries": ["United Arab Emirates", "South Africa", "Saudi Arabia"]
+    },
+    {
+      "name": "South America",
+      "countries": ["Brazil", "Argentina", "Chile"]
+    }
+  ]
+}

@@ -1,4 +1,7 @@
-version: '3.8'
+
+
+networks:
+  backend:
 
 services:
   # API Gateway
@@ -22,6 +25,13 @@ services:
       - search-service
       - ai-service
       - notification-service
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8000/health || exit 1"] # Replace /health with your actual health check endpoint
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Ingestion Service
   ingestion-service:
@@ -34,6 +44,9 @@ services:
     depends_on:
       - rabbitmq
       - metadata-service
+    networks:
+      - backend
+    # Add a health check specific to your ingestion service
 
   # Metadata Service
   metadata-service:
@@ -52,6 +65,9 @@ services:
       - postgres
       - mongo
       - rabbitmq
+    networks:
+      - backend
+    # Add a health check specific to your metadata service
 
   # Storage Service
   storage-service:
@@ -60,11 +76,14 @@ services:
       - "5003:5003"
     environment:
       - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_ACCESS_KEY=minioadmin 
+      - MINIO_SECRET_KEY=minioadmin  
       - MINIO_BUCKET=documents
     depends_on:
       - minio
+    networks:
+      - backend
+    # Add a health check specific to your storage service
 
   # Processing Service
   processing-service:
@@ -73,6 +92,9 @@ services:
       - "5004:5004"
     depends_on:
       - storage-service
+    networks:
+      - backend
+    # Add a health check specific to your processing service
 
   # Search Service
   search-service:
@@ -83,6 +105,9 @@ services:
       - ELASTICSEARCH_HOST=elasticsearch
     depends_on:
       - elasticsearch
+    networks:
+      - backend
+    # Add a health check specific to your search service
 
   # AI Service
   ai-service:
@@ -91,6 +116,9 @@ services:
       - "5006:5006"
     depends_on:
       - metadata-service
+    networks:
+      - backend
+    # Add a health check specific to your AI service
 
   # Notification Service
   notification-service:
@@ -104,18 +132,28 @@ services:
       - SMTP_PASSWORD=password
     depends_on:
       - smtp
+    networks:
+      - backend
+    # Add a health check specific to your notification service
 
   # Databases
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_DB: document_storage
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-document_storage}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d document_storage"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:5.0
@@ -123,6 +161,9 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - backend
+    # Add a health check for MongoDB
 
   elasticsearch:
     image: elasticsearch:7.10.1
@@ -132,6 +173,17 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Message Queue
   rabbitmq:
@@ -141,6 +193,13 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Object Storage (MinIO)
   minio:
@@ -149,11 +208,18 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: minioadmin  # Insecure, change for production!
+      MINIO_ROOT_PASSWORD: minioadmin # Insecure, change for production!
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # SMTP Server (for testing notifications)
   smtp:
@@ -161,6 +227,8 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - backend
 
 volumes:
   postgres_data:

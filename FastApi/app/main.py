@@ -1,13 +1,17 @@
 from fastapi import FastAPI
-from app.routes.ingestion import router as ingestion_router
-from app.routes.metadata import router as metadata_router
-from app.routes.storage import router as storage_router
-from app.routes.processing import router as processing_router
-from app.routes.search import router as search_router
-from app.routes.ai import router as ai_router
-from app.routes.notification import router as notification_router
+from fastapi.middleware.cors import CORSMiddleware
+from .routes import (
+    ingestion,
+    metadata,
+    storage,
+    processing,
+    search,
+    ai,
+    notification,
+    auth,
+    user_preferences
+)
 
-# Customize the OpenAPI schema
 app = FastAPI(
     title="API Gateway",
     description="A single entry point for all microservices in the Document Storage System.",
@@ -21,11 +25,22 @@ app = FastAPI(
     },
 )
 
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include all routes
-app.include_router(ingestion_router, prefix="/ingestion", tags=["ingestion"])
-app.include_router(metadata_router, prefix="/metadata", tags=["metadata"])
-app.include_router(storage_router, prefix="/storage", tags=["storage"])
-app.include_router(processing_router, prefix="/processing", tags=["processing"])
-app.include_router(search_router, prefix="/search", tags=["search"])
-app.include_router(ai_router, prefix="/ai", tags=["ai"])
-app.include_router(notification_router, prefix="/notification", tags=["notification"])
+app.include_router(ingestion.router, prefix="/ingestion", tags=["ingestion"])
+app.include_router(metadata.router, prefix="/metadata", tags=["metadata"])
+app.include_router(storage.router, prefix="/storage", tags=["storage"])
+app.include_router(processing.router, prefix="/processing", tags=["processing"])
+app.include_router(search.router, prefix="/search", tags=["search"])
+app.include_router(ai.router, prefix="/ai", tags=["ai"])
+app.include_router(notification.router, prefix="/notification", tags=["notification"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(user_preferences.router, prefix="/user-preferences", tags=["user-preferences"])
