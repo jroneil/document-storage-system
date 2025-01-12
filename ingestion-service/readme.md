@@ -1,3 +1,4 @@
+```
 ingestion-service/
 ├── app/
 │   ├── __init__.py
@@ -14,6 +15,7 @@ ingestion-service/
 │       └── test_ingestion.py
 ├── requirements.txt
 └── Dockerfile
+```
 The **Ingestion Service** is designed to handle **file uploads** from users, and it can read and process a wide variety of file types. Based on your requirements and the system's goals, the Ingestion Service should be capable of handling the following file types:
 
 ---
