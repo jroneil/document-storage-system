@@ -1,11 +1,24 @@
-FROM python:3.9-slim
+# syntax=docker/dockerfile:1
+# Use the latest stable Python 3.14 release, not the RC version
+FROM python:3.11
 
-WORKDIR /app
+# Install system dependencies and upgrade packages
+RUN apt-get update && apt-get install -y curl && apt-get clean
 
+# Upgrade pip (already included)
+RUN pip install --upgrade pip
+
+# Install curl (already included)
+
+
+# Copy requirements.txt and install dependencies
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy your application code
 COPY . .
+
 
 EXPOSE 5008
 

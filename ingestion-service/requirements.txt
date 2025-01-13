@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-pandas
 pika
 python-multipart
 boto3

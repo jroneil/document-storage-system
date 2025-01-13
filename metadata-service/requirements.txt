@@ -1,6 +1,6 @@
 fastapi
 uvicorn
 pymongo
-psycopg2
+psycopg2-binary
 pika
 python-dotenv

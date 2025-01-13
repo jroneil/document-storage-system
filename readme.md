@@ -173,3 +173,8 @@ For questions or feedback, please contact:
 The `README.md` file provides a comprehensive overview of your **Document Storage System** project, including setup instructions, features, and access details. It also includes sections for contributing, licensing, and contact information.
 
 Let me know if you need further assistance!
+
+# clean docker 
+docker system prune -a --volumes
+
+docker-compose build --no-cache

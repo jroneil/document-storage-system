@@ -1,10 +1,8 @@
 'use strict';
 
 import * as React from 'react';
-import { ToastProvider, useToast as useShadcnToast } from './toast';
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000;
 
 const actionTypes = {
   ADD_TOAST: 'ADD_TOAST',
@@ -125,27 +123,4 @@ function useToast() {
   };
 }
 
-function ToastProvider({ children, ...props }) {
-  const [state, setState] = React.useState(memoryState);
-
-  React.useEffect(() => {
-    listeners.push(setState);
-    return () => {
-      const index = listeners.indexOf(setState);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    };
-  }, [state]);
-
-  return (
-    <ToastProvider {...props}>
-      {children}
-      {state.toasts.map((t) => (
-        <Toast key={t.id} {...t} />
-      ))}
-    </ToastProvider>
-  );
-}
-
-export { ToastProvider, useToast };
+export { useToast };

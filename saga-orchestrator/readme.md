@@ -11,3 +11,6 @@ saga-orchestrator/
 │       └── test_orchestrator.py
 ├── requirements.txt
 └── Dockerfile
+pip install -r requirements.txt
+active evironment 
+venv\Scripts\activate.bat

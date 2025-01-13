@@ -10,11 +10,11 @@ export const apiClient = axios.create({
   },
   withCredentials: true
 });
-
+type filtertype = string | number | boolean | object; // Or any union that fits
 // User Preferences Endpoints
 export interface SearchCriteria {
   query: string;
-  filters: Record<string, any>;
+  filters: Record<string, filtertype>;
   sortBy?: string;
   sortOrder?: string;
   name?: string;
@@ -98,3 +98,4 @@ export const uploadDocument = async (file: File) => {
     }
   });
 };
+

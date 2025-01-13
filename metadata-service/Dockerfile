@@ -1,12 +1,25 @@
-FROM python:3.9
+# syntax=docker/dockerfile:1
+# Use the latest stable Python 3.14 release, not the RC version
+FROM python:3.13.1-alpine3.21
 
-WORKDIR /app
 
+
+# Upgrade pip (already included)
+RUN pip install --upgrade pip
+
+
+
+# Copy requirements.txt and install dependencies
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
+#
+# Copy your application code
 COPY . .
 
+# Expose the port
 EXPOSE 5001
 
+# Start the application using uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5001"]

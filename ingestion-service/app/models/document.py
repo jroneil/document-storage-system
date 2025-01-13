@@ -5,6 +5,7 @@ import uuid
 
 class DocumentMetadata(BaseModel):
     document_id: uuid.UUID
+    document_title: str
     file_name: str
     file_size: int
     file_type: str

@@ -1,7 +1,8 @@
 fastapi
 uvicorn
-pandas
-openpyxl
+pika
 python-multipart
-httpx
+boto3
 python-dotenv
+httpx
+openpyxl

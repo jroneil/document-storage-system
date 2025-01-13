@@ -1,16 +1,19 @@
 import { apiClient } from './apiClient'
 
+type SearchCriteria = string | number | boolean | object; // Or any union that fits
+
 export interface UserPreferences {
   savedSearches: {
     name: string
-    criteria: Record<string, any>
+    criteria: Record<string, SearchCriteria> // Use a union type for SearchCriteria
   }[]
   displayColumns: string[]
 }
 
+
 export const saveSearch = async (search: {
   name: string
-  criteria: Record<string, any>
+  criteria: Record<string, SearchCriteria>
 }) => {
   const response = await apiClient.post('/api/user-preferences/save-search', search)
   return response.data

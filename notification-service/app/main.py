@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from services.notification import send_email
+from app.services.notification import send_email
 
 app = FastAPI()
 

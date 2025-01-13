@@ -169,3 +169,5 @@ The AI Service integrates with the backend and other components of the system as
 ---
 
 The AI Service adds significant value to your document storage system by automating tasks, extracting insights, and improving user experience. Let me know if you’d like to dive deeper into any specific feature or implementation!
+
+ docker-compose -f docker-compose.yml build ai-service

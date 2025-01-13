@@ -31,11 +31,11 @@ def create_requirements_file(project_name):
         
 #Function to create a Dockerfile file if it doesn't exist
 def create_dockerfile_file(project_name):
-    dockerfile_path = os.path.join(project_name, 'Sockerfile')
+    dockerfile_path = os.path.join(project_name, 'Dockerfile')
     if not os.path.exists(dockerfile_path):
         with open(dockerfile_path, 'w') as f:
             f.write("# "+project_name)
-        print(f"Created an empty DockerRile at: {dockerfile_path}")
+        print(f"Created an empty Dockerfile at: {dockerfile_path}")
     else:
         print("DockerRile already exists.")
 #Function to create a Dockerfile file if it doesn't exist

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from services.s3_storage import upload_file_to_s3, delete_file_from_s3
+from app.services.s3_storage import upload_file_to_s3, delete_file_from_s3
 
 app = FastAPI()
 

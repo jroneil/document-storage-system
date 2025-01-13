@@ -1,22 +1,25 @@
+version: '3.8'
 
-
-networks:
-  backend:
+x-common-environment:
+  &default-env
+  RABBITMQ_HOST: rabbitmq
+  METADATA_SERVICE_URL: http://metadata-service:5002
+  STORAGE_SERVICE_URL: http://storage-service:5003
 
 services:
-  # API Gateway
   api-gateway:
     build: ./api-gateway
     ports:
       - "8000:8000"
     environment:
-      - INGESTION_SERVICE_URL=http://ingestion-service:5001
-      - METADATA_SERVICE_URL=http://metadata-service:5002
-      - STORAGE_SERVICE_URL=http://storage-service:5003
-      - PROCESSING_SERVICE_URL=http://processing-service:5004
-      - SEARCH_SERVICE_URL=http://search-service:5005
-      - AI_SERVICE_URL=http://ai-service:5006
-      - NOTIFICATION_SERVICE_URL=http://notification-service:5007
+      <<: *default-env
+      INGESTION_SERVICE_URL: http://ingestion-service:5001
+      PROCESSING_SERVICE_URL: http://processing-service:5004
+      SEARCH_SERVICE_URL: http://search-service:5005
+      AI_SERVICE_URL: http://ai-service:5006
+      NOTIFICATION_SERVICE_URL: http://notification-service:5007
+      BULK_UPLOAD_SERVICE_URL: http://bulk-upload-service:5008
+      SAGA_ORCHESTRATOR_URL: http://saga-orchestrator:5009
     depends_on:
       - ingestion-service
       - metadata-service
@@ -25,67 +28,62 @@ services:
       - search-service
       - ai-service
       - notification-service
+      - bulk-upload-service
+      - saga-orchestrator
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:8000/health || exit 1"] # Replace /health with your actual health check endpoint
+      test: ["CMD-SHELL", "curl -s http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Ingestion Service
   ingestion-service:
     build: ./ingestion-service
     ports:
       - "5001:5001"
     environment:
-      - RABBITMQ_HOST=rabbitmq
-      - METADATA_SERVICE_URL=http://metadata-service:5002
+      <<: *default-env
     depends_on:
       - rabbitmq
-      - metadata-service
     networks:
       - backend
-    # Add a health check specific to your ingestion service
 
-  # Metadata Service
   metadata-service:
     build: ./metadata-service
     ports:
       - "5002:5002"
     environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_DB=document_storage
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password
-      - MONGO_HOST=mongo
-      - MONGO_DB=metadata_db
-      - RABBITMQ_HOST=rabbitmq
+      <<: *default-env
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: document_storage
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      MONGO_HOST: mongo
+      MONGO_DB: metadata_db
     depends_on:
       - postgres
       - mongo
-      - rabbitmq
+    volumes:
+      - ./metadata-service/config:/app/config
     networks:
       - backend
-    # Add a health check specific to your metadata service
 
-  # Storage Service
   storage-service:
     build: ./storage-service
     ports:
       - "5003:5003"
     environment:
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin 
-      - MINIO_SECRET_KEY=minioadmin  
-      - MINIO_BUCKET=documents
+      <<: *default-env
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: documents
     depends_on:
       - minio
     networks:
       - backend
-    # Add a health check specific to your storage service
 
-  # Processing Service
   processing-service:
     build: ./processing-service
     ports:
@@ -94,22 +92,18 @@ services:
       - storage-service
     networks:
       - backend
-    # Add a health check specific to your processing service
 
-  # Search Service
   search-service:
     build: ./search-service
     ports:
       - "5005:5005"
     environment:
-      - ELASTICSEARCH_HOST=elasticsearch
+      ELASTICSEARCH_HOST: elasticsearch
     depends_on:
       - elasticsearch
     networks:
       - backend
-    # Add a health check specific to your search service
 
-  # AI Service
   ai-service:
     build: ./ai-service
     ports:
@@ -120,31 +114,50 @@ services:
       - metadata-service
     networks:
       - backend
-    # Add a health check specific to your AI service
 
-  # Notification Service
   notification-service:
     build: ./notification-service
     ports:
       - "5007:5007"
     environment:
-      - SMTP_HOST=smtp
-      - SMTP_PORT=1025
-      - SMTP_USER=user
-      - SMTP_PASSWORD=password
+      SMTP_HOST: smtp
+      SMTP_PORT: 1025
+      SMTP_USER: user
+      SMTP_PASSWORD: password
     depends_on:
       - smtp
     networks:
       - backend
-    # Add a health check specific to your notification service
 
-  # Databases
+  bulk-upload-service:
+    build: ./bulk-upload-service
+    ports:
+      - "5008:5008"
+    environment:
+      <<: *default-env
+    depends_on:
+      - metadata-service
+      - storage-service
+    networks:
+      - backend
+
+  saga-orchestrator:
+    build: ./saga-orchestrator
+    ports:
+      - "5009:5009"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend
+
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-document_storage}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: document_storage
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
@@ -165,7 +178,6 @@ services:
       - mongo_data:/data/db
     networks:
       - backend
-    # Add a health check for MongoDB
 
   elasticsearch:
     image: elasticsearch:7.10.1
@@ -177,17 +189,7 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - backend
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"'"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # Message Queue
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -197,33 +199,24 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - backend
-    healthcheck:
-      test: ["CMD-SHELL", "rabbitmqctl status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    environment:
+      RABBITMQ_DEFAULT_USER: myuser
+      RABBITMQ_DEFAULT_PASS: mypassword
 
-  # Object Storage (MinIO)
   minio:
     image: minio/minio
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin  # Insecure, change for production!
-      MINIO_ROOT_PASSWORD: minioadmin # Insecure, change for production!
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
     networks:
       - backend
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # SMTP Server (for testing notifications)
   smtp:
     image: mailhog/mailhog
     ports:
@@ -238,3 +231,7 @@ volumes:
   elasticsearch_data:
   rabbitmq_data:
   minio_data:
+
+networks:
+  backend:
+    driver: bridge

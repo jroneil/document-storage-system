@@ -1,131 +1,64 @@
-'use client'
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DocumentResult } from "@/types/document";
+import React from "react";
 
-import { useState, useEffect } from 'react'
-import Popup from './Popup'
-import ResultsDisplay from './ResultsDisplay'
-import { getPreferences } from '@/lib/userPreferences'
-import { Button } from './ui/button'
-
-interface SavedSearch {
-  name: string
-  criteria: Record<string, any>
+interface SearchResultProps {
+  results?: DocumentResult[];  // Make results optional
+  selectedColumns?: string[];  // Make selectedColumns optional
 }
 
-interface DocumentResult {
-  id: string
-  title: string
-  description: string
-  type: string
-  date: string
-  status: string
-}
+function SearchResults({ 
+  results = [],  // Provide default empty array
+  selectedColumns = []  // Provide default empty array
+}: SearchResultProps) {
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString();
+  };
 
-export default function SearchResults() {
-  const [showResults, setShowResults] = useState(false)
-  const [results, setResults] = useState<DocumentResult[]>([])
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([])
-  const [showSavedSearches, setShowSavedSearches] = useState(false)
-
-  // Load saved searches on mount
-  useEffect(() => {
-    const loadSavedSearches = async () => {
-      try {
-        const preferences = await getPreferences()
-        setSavedSearches(preferences.savedSearches)
-      } catch (error) {
-        console.error('Failed to load saved searches:', error)
-      }
-    }
-    loadSavedSearches()
-  }, [])
-
-  // Mock data for demonstration
-  const mockResults = [
-    { 
-      id: '1', 
-      title: 'Document 1', 
-      description: 'Sample document description 1',
-      type: 'PDF', 
-      date: '2023-01-01', 
-      status: 'Approved' 
-    },
-    { 
-      id: '2', 
-      title: 'Document 2', 
-      description: 'Sample document description 2',
-      type: 'DOCX', 
-      date: '2023-02-15', 
-      status: 'Pending' 
-    },
-    { 
-      id: '3', 
-      title: 'Document 3', 
-      description: 'Sample document description 3',
-      type: 'XLSX', 
-      date: '2023-03-20', 
-      status: 'Rejected' 
-    }
-  ]
-
-  const handleSearch = () => {
-    // TODO: Replace with actual search logic
-    setResults(mockResults)
-    setShowResults(true)
-  }
-
-  const handleLoadSearch = (searchCriteria: Record<string, any>) => {
-    // TODO: Implement search with loaded criteria
-    console.log('Loading search:', searchCriteria)
-    handleSearch()
-  }
-
-  const handleSelect = (id: string) => {
-    // TODO: Handle document selection
-    console.log('Selected document:', id)
-    setShowResults(false)
-  }
+  // Add a guard clause for extra safety
+  if (!results) return null;
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button onClick={handleSearch}>
-          Search
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={() => setShowSavedSearches(!showSavedSearches)}
-        >
-          {showSavedSearches ? 'Hide' : 'Show'} Saved Searches
-        </Button>
-      </div>
-
-      {showSavedSearches && (
-        <div className="space-y-2">
-          {savedSearches.map((search, index) => (
-            <div 
-              key={index}
-              className="p-2 border rounded hover:bg-gray-50 cursor-pointer"
-              onClick={() => handleLoadSearch(search.criteria)}
-            >
-              <div className="font-medium">{search.name}</div>
-              <div className="text-sm text-gray-500">
-                {Object.entries(search.criteria).map(([key, value]) => (
-                  <div key={key}>{key}: {JSON.stringify(value)}</div>
-                ))}
+      {results.map((doc) => (
+        <Card key={doc.document_id} className="p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium">{doc.file_name}</h3>
+              <div className="mt-2 space-y-1 text-sm text-gray-600">
+                {selectedColumns.includes("type") && (
+                  <p>Type: {doc.document_type}</p>
+                )}
+                {selectedColumns.includes("date") && (
+                  <p>Upload Date: {formatDate(doc.upload_date)}</p>
+                )}
+                {selectedColumns.includes("division") && doc.division && (
+                  <p>Division: {doc.division}</p>
+                )}
+                {selectedColumns.includes("business_unit") && doc.business_unit && (
+                  <p>Business Unit: {doc.business_unit}</p>
+                )}
               </div>
+              {doc.tags && doc.tags.length > 0 && (
+                <div className="mt-2 flex gap-2">
+                  {doc.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
-
-      {showResults && (
-        <Popup onClose={() => setShowResults(false)}>
-          <ResultsDisplay 
-            results={results} 
-            onSelect={handleSelect}
-          />
-        </Popup>
-      )}
+            <Button variant="outline" size="sm">
+              View
+            </Button>
+          </div>
+        </Card>
+      ))}
     </div>
-  )
+  );
 }
+
+export default SearchResults;

@@ -1,8 +1,8 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-from services.file_upload import handle_file_upload
-from services.metadata_parser import parse_metadata
-from services.message_queue import publish_event
+from app.services.file_upload import handle_file_upload
+from app.services.metadata_parser import parse_metadata
+from app.services.message_queue import publish_event
 
 app = FastAPI()
 

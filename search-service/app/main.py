@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from services.elasticsearch_client import index_document, search_documents
+from app.services.elasticsearch_client import index_document, search_documents
 
 app = FastAPI()
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
+import { DatePickerComponent as DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/select";
 
 export function SearchForm() {
-  const [searchParams, setSearchParams] = useState({
+  interface SearchParams {
+    documentName: string;
+    division: string;
+    businessUnit: string;
+    startDate: Date | null;
+    endDate: Date | null;
+    documentType: string;
+  }
+
+  const [searchParams, setSearchParams] = useState<SearchParams>({
     documentName: "",
     division: "",
     businessUnit: "",
@@ -22,7 +31,7 @@ export function SearchForm() {
     documentType: "",
   });
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // TODO: Implement search logic
   };

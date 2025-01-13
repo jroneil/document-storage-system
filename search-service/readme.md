@@ -1,3 +1,4 @@
+```
 search-service/
 ├── app/
 │   ├── __init__.py
@@ -10,3 +11,5 @@ search-service/
 │       └── test_search.py
 ├── requirements.txt
 └── Dockerfile
+```
+docker-compose build --no-cache search-service
