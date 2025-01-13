@@ -1,3 +1,4 @@
+```
 ingestion-service/
 ├── app/
 │   ├── __init__.py
@@ -14,6 +15,7 @@ ingestion-service/
 │       └── test_ingestion.py
 ├── requirements.txt
 └── Dockerfile
+```
 The **Ingestion Service** is designed to handle **file uploads** from users, and it can read and process a wide variety of file types. Based on your requirements and the system's goals, the Ingestion Service should be capable of handling the following file types:
 
 ---
@@ -200,141 +202,3 @@ The Ingestion Service can handle different file types by using appropriate libra
 
 ### **Conclusion**
 The **Ingestion Service** is designed to handle a wide variety of file types, including documents, images, videos, and more. It reads the uploaded file, extracts metadata, and processes the file based on its type. This flexibility ensures that the system can accommodate diverse user needs.
-
-1. Clone the repository
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Configuration
-
-Create a `.env` file with the following environment variables:
-
-```bash
-MESSAGE_QUEUE_HOST=localhost
-MESSAGE_QUEUE_PORT=5672
-MESSAGE_QUEUE_USER=guest
-MESSAGE_QUEUE_PASSWORD=guest
-FILE_STORAGE_PATH=/var/lib/dms2/uploads
-```
-
-## Running the Service
-
-### Local Development
-```bash
-python -m app.main
-```
-
-### Docker
-Build and run the service:
-```bash
-docker build -t ingestion-service .
-docker run -p 8000:8000 ingestion-service
-```
-
-## API Endpoints
-
-### POST /upload
-Upload a document with metadata
-
-**Request:**
-```json
-{
-  "file": "binary_data",
-  "metadata": {
-    "title": "Document Title",
-    "description": "Document Description"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "document_id": "uuid",
-  "status": "queued"
-}
-```
-
-## Testing
-
-Run tests with:
-```bash
-python -m pytest app/tests/
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
-To install the required dependencies for a Python project, you typically use a `requirements.txt` file. This file lists all the packages and their versions that your project needs. Here's how you can install them:
-
-ext
-numpy==1.21.0
-pandas==1.3.0
-flask==2.0.1
-```
-
-### Step 2: In### Step 1: Create or Locate the `requirements.txt` File
-If you already have a `requirements.txt` file, you can skip this step. Otherwise, create one in the root directory of your project. The file should list the required packages, one per line, like this:
-
-```plaintstall the Requirements
-Open a terminal or command prompt and navigate to the directory where your `requirements.txt` file is located. Then run the following command:
-
-```bash
-pip install -r requirements.txt
-```
-
-This command tells `pip` to install all the packages listed in the `requirements.txt` file.
-
-### Step 3: Verify the Installation
-After the installation is complete, you can verify that the packages were installed correctly by running:
-
-```bash
-pip list
-```
-
-This will show you all the installed packages and their versions.
-
-### Additional Tips
-- **Virtual Environment**: It's a good practice to use a virtual environment to manage dependencies for your project. You can create one using:
-
-  ```bash
-  python -m venv myenv
-  ```
-
-  Activate it with:
-
-  - On Windows:
-    ```bash
-    myenv\Scripts\activate
-    ```
-  - On macOS/Linux:
-    ```bash
-    source myenv/bin/activate
-    ```
-
-  Then install the requirements within the virtual environment.
-
-- **Updating Requirements**: If you add new dependencies to your project, you can update the `requirements.txt` file by running:
-
-  ```bash
-  pip freeze > requirements.txt
-  ```
-
-  This will overwrite the `requirements.txt` file with the current state of your environment.
-
-That's it! You should now have all the necessary packages installed to run your Python project.
-# clear cache and build
-```
-docker-compose build --no-cache ingestion-service
-```
