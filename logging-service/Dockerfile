@@ -1,0 +1,6 @@
+FROM graylog/graylog:5.2
+
+# Environment variables
+ENV GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+ENV GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+ENV GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
