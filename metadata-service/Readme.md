@@ -1,3 +1,4 @@
+```
 ├── metadata-service/
 │   ├── app/
 │   │   ├── __init__.py
@@ -14,7 +15,9 @@
 │   │       └── test_metadata.py
 │   ├── requirements.txt
 │   └── Dockerfile
-├── docker-compose.yml                  # Project documentation
+├── docker-compose.yml
+```
+# Project documentation
 # Metadata Service
 
 This service manages metadata objects using a hybrid database approach:
