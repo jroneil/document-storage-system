@@ -1,3 +1,4 @@
+```
 ai-service/
 ├── app/
 │   ├── __init__.py
@@ -10,6 +11,7 @@ ai-service/
 │       └── test_ai.py
 ├── requirements.txt
 └── Dockerfile
+```
 The **AI Service** in your document storage system can play a crucial role in enhancing functionality, automating tasks, and providing intelligent features. Below is a detailed explanation of what the AI Service can do, along with potential use cases and integration points.
 
 ---
