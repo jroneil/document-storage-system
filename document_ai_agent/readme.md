@@ -17,7 +17,7 @@ The **Document AI Agent** publishes messages to RabbitMQ whenever new documents 
 - **Password**: `guest`
 
 ### Example Message
-```json
+```
 {
     "filename": "example.pdf",
     "tags": "AI,Machine Learning",
@@ -25,6 +25,7 @@ The **Document AI Agent** publishes messages to RabbitMQ whenever new documents 
     "summary": "This document discusses the impact of AI on modern technology...",
     "sentiment": "Sentiment(polarity=0.8, subjectivity=0.6)"
 }
+```
 ---
 
 ## Features
