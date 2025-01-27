@@ -1,3 +1,4 @@
+```
 bulk-upload-service/
 ├── app/
 │   ├── __init__.py
@@ -12,6 +13,7 @@ bulk-upload-service/
 │       └── test_bulk_upload.py
 ├── requirements.txt
 └── Dockerfile
+```
 10. Running the Service
 Build the Docker image:
 
