@@ -1,3 +1,4 @@
+```
 saga-orchestrator/
 ├── app/
 │   ├── __init__.py
@@ -13,4 +14,5 @@ saga-orchestrator/
 └── Dockerfile
 pip install -r requirements.txt
 active evironment 
-venv\Scripts\activate.bat
+venv\Scripts\activate.
+```
