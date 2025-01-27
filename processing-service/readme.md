@@ -1,3 +1,4 @@
+```
 processing-service/
 ├── app/
 │   ├── __init__.py
@@ -11,3 +12,4 @@ processing-service/
 │       └── test_processing.py
 ├── requirements.txt
 └── Dockerfile
+```
