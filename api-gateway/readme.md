@@ -1,3 +1,4 @@
+```
 api-gateway/
 ├── app/
 │   ├── __init__.py
@@ -14,3 +15,4 @@ api-gateway/
 │       └── auth.py
 ├── requirements.txt
 └── Dockerfile
+```

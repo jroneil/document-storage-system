@@ -1,7 +1,3 @@
-Certainly! Below is a **README.md** file for your **Document Storage System** project. This file provides an overview of the project, setup instructions, and details about accessing the services.
-
----
-
 ### **File: `README.md`**
 
 ```markdown
