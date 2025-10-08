@@ -1,0 +1,77 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dms-ingress
+  namespace: document-storage
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: dms.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: admin-service
+            port:
+              number: 3000
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 8000
+  - host: api.dms.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 8000
+  - host: minio.dms.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio
+            port:
+              number: 9001
+  - host: rabbitmq.dms.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq
+            port:
+              number: 15672
+  - host: mailhog.dms.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: smtp
+            port:
+              number: 8025
+  tls:
+  - hosts:
+    - dms.yourdomain.com
+    - api.dms.yourdomain.com
+    - minio.dms.yourdomain.com
+    - rabbitmq.dms.yourdomain.com
+    - mailhog.dms.yourdomain.com
+    secretName: dms-tls-cert

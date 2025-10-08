@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: document-storage
+
+bases:
+  - ../../base
+
+# Production-specific patches
+patchesStrategicMerge:
+  - replica-patch.yaml
+  - resource-patch.yaml
+
+# Production configuration
+configMapGenerator:
+  - name: dms-config-prod
+    behavior: merge
+    literals:
+      - ENV=production
+
+# Image tags for production
+images:
+  - name: YOUR_REGISTRY/api-gateway
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/ingestion-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/metadata-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/storage-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/processing-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/search-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/ai-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/notification-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/bulk-upload-service
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/saga-orchestrator
+    newTag: v1.0.0
+  - name: YOUR_REGISTRY/admin-service
+    newTag: v1.0.0

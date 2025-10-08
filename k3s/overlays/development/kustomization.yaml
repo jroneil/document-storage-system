@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: document-storage
+
+bases:
+  - ../../base
+
+# Development configuration
+configMapGenerator:
+  - name: dms-config-dev
+    behavior: merge
+    literals:
+      - ENV=development
+      - DEBUG=true
+
+# Image tags for development (use latest or specific dev tags)
+images:
+  - name: YOUR_REGISTRY/api-gateway
+    newTag: latest
+  - name: YOUR_REGISTRY/ingestion-service
+    newTag: latest
+  - name: YOUR_REGISTRY/metadata-service
+    newTag: latest
+  - name: YOUR_REGISTRY/storage-service
+    newTag: latest
+  - name: YOUR_REGISTRY/processing-service
+    newTag: latest
+  - name: YOUR_REGISTRY/search-service
+    newTag: latest
+  - name: YOUR_REGISTRY/ai-service
+    newTag: latest
+  - name: YOUR_REGISTRY/notification-service
+    newTag: latest
+  - name: YOUR_REGISTRY/bulk-upload-service
+    newTag: latest
+  - name: YOUR_REGISTRY/saga-orchestrator
+    newTag: latest
+  - name: YOUR_REGISTRY/admin-service
+    newTag: latest

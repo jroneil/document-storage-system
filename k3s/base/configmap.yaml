@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dms-config
+  namespace: document-storage
+data:
+  # Service URLs
+  RABBITMQ_HOST: rabbitmq
+  METADATA_SERVICE_URL: http://metadata-service:5002
+  STORAGE_SERVICE_URL: http://storage-service:5003
+  INGESTION_SERVICE_URL: http://ingestion-service:5001
+  PROCESSING_SERVICE_URL: http://processing-service:5004
+  SEARCH_SERVICE_URL: http://search-service:5005
+  AI_SERVICE_URL: http://ai-service:5006
+  NOTIFICATION_SERVICE_URL: http://notification-service:5007
+  BULK_UPLOAD_SERVICE_URL: http://bulk-upload-service:5008
+  SAGA_ORCHESTRATOR_URL: http://saga-orchestrator:5009
+  
+  # Database hosts
+  POSTGRES_HOST: postgres
+  MONGO_HOST: mongo
+  
+  # MinIO config
+  MINIO_ENDPOINT: minio:9000
+  MINIO_BUCKET: documents
+  
+  # Elasticsearch config
+  ELASTICSEARCH_HOST: elasticsearch
+  
+  # SMTP config
+  SMTP_HOST: smtp
+  SMTP_PORT: "1025"
