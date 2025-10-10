@@ -1,12 +1,15 @@
 # Use a Debian-based Python image
 FROM python:3.13-slim
 
+# Set working directory
+WORKDIR /app
+
 # Upgrade pip
 RUN pip install --upgrade pip
 
 # Install necessary build tools for other libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ make libffi-dev && \
+    gcc g++ make libffi-dev curl && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set an environment variable to ensure prebuilt binaries are used

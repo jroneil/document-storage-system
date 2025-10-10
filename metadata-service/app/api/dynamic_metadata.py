@@ -20,7 +20,7 @@ def create_metadata(metadata: DynamicMetadataCreate, brand_id: uuid.UUID = None,
 
 @router.get("/dynamic-metadata/{document_id}", response_model=DynamicMetadataResponse)
 def read_metadata(document_id: str):
-    metadata = get_dynamic_metadata(document_id)
-    if metadata is None:
+    dynamic_metadata = get_dynamic_metadata(document_id)
+    if dynamic_metadata is None:
         raise HTTPException(status_code=404, detail="Metadata not found")
-    return metadata
+    return dynamic_metadata

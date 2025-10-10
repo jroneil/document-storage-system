@@ -174,3 +174,21 @@ Let me know if you need further assistance!
 docker system prune -a --volumes
 
 docker-compose build --no-cache
+
+## To Apply All Changes:
+
+Rebuild and restart your containers:
+
+```bash
+docker-compose down
+docker-compose build
+docker-compose up -d
+```
+
+Or rebuild specific services:
+
+```bash
+docker-compose build metadata-service
+docker-compose up -d
+```
+

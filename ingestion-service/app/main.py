@@ -4,10 +4,38 @@ from app.services.file_upload import handle_file_upload
 from app.services.metadata_extraction import extract_metadata
 import uuid
 import httpx
+from contextlib import asynccontextmanager
+import asyncio
+import threading
+from app.services.orchestrator import start_saga, handle_document_uploaded_event
+from app.services.message_queue import listen_for_events
+ 
+
 
 app = FastAPI()
 
 SAGA_ORCHESTRATOR_URL: str = "http://saga-orchestrator:5002"
+def run_event_listener():
+    """Run the event listener in a separate thread"""
+    listen_for_events("document_uploaded", handle_document_uploaded_event)
+    
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Start event listener in background thread
+    listener_thread = threading.Thread(target=run_event_listener, daemon=True)
+    listener_thread.start()
+    print("Event listener started")
+    yield
+    # Shutdown: Clean up if needed
+    print("Shutting down")
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring service status"""
+    return JSONResponse(
+        status_code=200,
+        content={"status": "healthy", "service": "ingestion-service"}
+    )
 
 
 @app.post("/upload")

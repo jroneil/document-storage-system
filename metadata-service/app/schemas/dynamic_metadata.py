@@ -4,10 +4,10 @@ from app.utils.validators import validate_metadata
 from app.crud.branding import get_brand
 from sqlalchemy.orm import Session
 
-def create_dynamic_metadata(db: Session, metadata: Dict, brand_id: uuid.UUID = None):
+def create_dynamic_metadata(db: Session, dynmetadata: Dict, brand_id: uuid.UUID = None):
     if brand_id:
         brand = get_brand(db, brand_id)
         if brand:
-            validate_metadata(metadata, brand.required_metadata)
-    result = metadata_collection.insert_one(metadata)
+            validate_metadata(dynmetadata, brand.required_metadata)
+    result = metadata_collection.insert_one(dynmetadata)
     return {"id": str(result.inserted_id)}

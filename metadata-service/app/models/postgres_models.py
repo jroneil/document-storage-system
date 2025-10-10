@@ -1,12 +1,13 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, BigInteger, DateTime, ForeignKey, Index, func
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 
 import uuid
 
 Base = declarative_base()
 
-class StandProperties(Base):
-    __tablename__ = "stand_properties"
+class StandMetadata(Base):
+    __tablename__ = "stand_metadata"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     location = Column(String, nullable=False)

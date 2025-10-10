@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional, Dict
 
-class StandPropertiesCreate(BaseModel):
+class StandMetadataCreate(BaseModel):
     name: str
     location: str
     attributes: Optional[Dict] = None
 
-class StandPropertiesResponse(BaseModel):
+class StandMetadataResponse(BaseModel):
     id: int
     name: str
     location: str

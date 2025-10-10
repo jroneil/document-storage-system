@@ -1,8 +1,9 @@
-
-
 x-common-environment:
   &default-env
   RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USER: admin
+  RABBITMQ_PASSWORD: password
   METADATA_SERVICE_URL: http://metadata-service:5002
   STORAGE_SERVICE_URL: http://storage-service:5003
 
@@ -21,15 +22,22 @@ services:
       BULK_UPLOAD_SERVICE_URL: http://bulk-upload-service:5008
       SAGA_ORCHESTRATOR_URL: http://saga-orchestrator:5009
     depends_on:
-      - ingestion-service
-      - metadata-service
-      - storage-service
-      - processing-service
-      - search-service
-      - ai-service
-      - notification-service
-      - bulk-upload-service
-      - saga-orchestrator
+      ingestion-service:
+        condition: service_healthy
+      metadata-service:
+        condition: service_healthy
+      storage-service:
+        condition: service_healthy
+      processing-service:
+        condition: service_healthy
+      search-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_started
+      bulk-upload-service:
+        condition: service_started
+      saga-orchestrator:
+        condition: service_started
     networks:
       - backend
     healthcheck:
@@ -41,11 +49,18 @@ services:
   ingestion-service:
     build: ./ingestion-service
     ports:
-      - "5001:5001"
+      - "5001:5000"
     environment:
       <<: *default-env
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - backend
 
@@ -62,8 +77,18 @@ services:
       MONGO_HOST: mongo
       MONGO_DB: metadata_db
     depends_on:
-      - postgres
-      - mongo
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5002/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - ./metadata-service/config:/app/config
     networks:
@@ -80,7 +105,14 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: documents
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5003/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - backend
 
@@ -90,6 +122,12 @@ services:
       - "5004:5004"
     depends_on:
       - storage-service
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5004/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - backend
 
@@ -98,10 +136,55 @@ services:
     ports:
       - "5005:5005"
     environment:
+      <<: *default-env
       ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_PROTOCOL: http
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
+      - backend
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.15
+    container_name: graylog-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - "bootstrap.memory_lock=true"
+      - "action.destructive_requires_name=false"
+      - "cluster.routing.allocation.disk.threshold_enabled=false"
+      - "http.host=0.0.0.0"
+      - "transport.host=0.0.0.0"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s || exit 1"]
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 120s
+    networks:
+      - graylog
       - backend
 
   ai-service:
@@ -147,38 +230,23 @@ services:
       - "5009:5009"
     environment:
       RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: password
+      RABBITMQ_VHOST: /
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5009/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - backend
 
   # Logging services
-  mongo-log:
-    image: mongo:6.0
-    container_name: graylog-mongo
-    restart: always
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - graylog
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
-    container_name: graylog-elasticsearch
-    restart: always
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - xpack.security.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - graylog
-
   graylog:
     image: graylog/graylog:5.2
     container_name: graylog
@@ -188,16 +256,19 @@ services:
       - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
       - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
       - GRAYLOG_ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - GRAYLOG_MONGODB_URI=mongodb://mongo:27017/graylog
+      - GRAYLOG_MONGODB_URI=mongodb://admin:password@mongo:27017/graylog?authSource=admin
     ports:
       - 9002:9000
       - 12201:12201
       - 12201:12201/udp
     depends_on:
-      - mongo-log
-      - elasticsearch
+      mongo:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     networks:
       - graylog
+      - backend
 
   smtp:
     image: mailhog/mailhog:latest
@@ -221,11 +292,17 @@ services:
       RABBITMQ_DEFAULT_PASS: password
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - backend
 
   minio:
-    image: minio/minio:RELEASE.2023-10-25T06-33-25Z
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     container_name: minio
     hostname: minio
     ports:
@@ -237,6 +314,11 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     networks:
       - backend
 
@@ -251,8 +333,15 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - backend
+      - graylog
 
   postgres:
     image: postgres:15-alpine
@@ -266,9 +355,30 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d document_storage"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - backend
 
+  user-portal:
+    build:
+      context: ./user-portal
+      dockerfile: Dockerfile.dev
+    container_name: dms-user-portal
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./user-portal:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - metadata-service
 
 networks:
   graylog:

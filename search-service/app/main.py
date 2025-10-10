@@ -1,9 +1,27 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from app.services.elasticsearch_client import index_document, search_documents
+import datetime
 
 app = FastAPI()
 
+# Simple test endpoint - add this first
+@app.get("/test")
+async def test_endpoint():
+    return {"message": "Test successful"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancing"""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "search-service",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "version": "1.0.0"
+        }
+    )
 @app.post("/index-document")
 async def index_document_endpoint(document_id: str, metadata: dict):
     try:

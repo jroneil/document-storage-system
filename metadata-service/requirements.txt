@@ -4,3 +4,4 @@ pymongo
 psycopg2-binary
 pika
 python-dotenv
+sqlalchemy>=2.0

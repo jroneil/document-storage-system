@@ -1,24 +1,24 @@
 # syntax=docker/dockerfile:1
-FROM python:3.13-slim
+FROM python:3.13.1-alpine3.21
 
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libssl-dev \
+# Install system dependencies for Alpine
+RUN apk add --no-cache \
+    curl \
+    gcc \
+    g++ \
     libffi-dev \
-    && rm -rf /var/lib/apt/lists/*
+    openssl-dev \
+    python3-dev \
+    musl-dev \
+    build-base
 
-# Copy requirements first to leverage Docker layer caching
+# Upgrade pip
+RUN pip install --upgrade pip
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Expose the port
 EXPOSE 5005
-
-# Start the application using Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5005"]

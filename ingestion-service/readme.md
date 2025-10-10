@@ -200,5 +200,86 @@ The Ingestion Service can handle different file types by using appropriate libra
 
 ---
 
+### **Running the Service Standalone**
+
+#### Prerequisites
+- Python 3.7+ installed
+- MongoDB running locally (default: localhost:27017)
+- RabbitMQ running locally (default: rabbitmq host)
+
+#### Setup Instructions
+
+**Option 1: Using the setup script (Recommended)**
+1. Navigate to the ingestion-service directory:
+   ```bash
+   cd ingestion-service
+   ```
+
+2. Run the setup script:
+   ```bash
+   ./setup.sh
+   ```
+   This will:
+   - Create a virtual environment
+   - Activate it
+   - Install all dependencies including uvicorn[standard]
+
+**Option 2: Manual Setup**
+1. Navigate to the ingestion-service directory:
+   ```bash
+   cd ingestion-service
+   ```
+
+2. Create and activate virtual environment:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   pip install "uvicorn[standard]"
+   ```
+
+#### Running the Service
+
+**Method 1: Using run.py (Recommended)**
+```bash
+python run.py
+```
+This will start the service on `http://0.0.0.0:5000` with auto-reload enabled.
+
+**Method 2: Direct uvicorn command**
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload
+```
+
+#### Environment Configuration
+The service uses the following environment variables (configured in `.env` file):
+- `MONGODB_URI=mongodb://localhost:27017/`
+- `RABBITMQ_HOST=rabbitmq`
+- `RABBITMQ_USER=myuser`
+- `RABBITMQ_PASSWORD=mypassword`
+
+**Note**: For standalone operation, you may need to update the `.env` file:
+- Change `RABBITMQ_HOST=rabbitmq` to `RABBITMQ_HOST=localhost` if RabbitMQ is running locally
+- Ensure MongoDB and RabbitMQ services are running before starting the ingestion service
+
+#### Testing the Service
+Once running, you can test the upload endpoint:
+```bash
+curl -X POST "http://localhost:5000/upload" \
+  -F "file=@/path/to/your/file.pdf" \
+  -F "user_id=user-uuid" \
+  -F "file_type=PDF" \
+  -F "document_type=Technical"
+```
+
+The service will be available at `http://localhost:5000` and includes auto-reload for development.
+
 ### **Conclusion**
 The **Ingestion Service** is designed to handle a wide variety of file types, including documents, images, videos, and more. It reads the uploaded file, extracts metadata, and processes the file based on its type. This flexibility ensures that the system can accommodate diverse user needs.

@@ -2,12 +2,17 @@ from fastapi import APIRouter, HTTPException
 import httpx
 from dotenv import load_dotenv
 import os
-
+from fastapi.responses import JSONResponse
 load_dotenv()
 
 STORAGE_SERVICE_URL = os.getenv("STORAGE_SERVICE_URL")
 
 router = APIRouter()
+@router.get("/health")
+async def health():
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"{STORAGE_SERVICE_URL}/health", timeout=10)
+    return JSONResponse(status_code=r.status_code, content=r.json())
 
 @router.post("/upload")
 async def upload_file(file: bytes):

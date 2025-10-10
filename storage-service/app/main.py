@@ -1,8 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from app.services.s3_storage import upload_file_to_s3, delete_file_from_s3
+import datetime
 
 app = FastAPI()
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancing"""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "storage-service",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "version": "1.0.0"
+        }
+    )
 
 @app.post("/upload")
 async def upload_file(file_path: str, bucket_name: str, s3_key: str):

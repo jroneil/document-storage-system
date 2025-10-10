@@ -4,7 +4,13 @@ import os
 
 load_dotenv()
 
-es = Elasticsearch(os.getenv("ELASTICSEARCH_HOST"))
+# Construct the full Elasticsearch URL
+es_protocol = os.getenv("ELASTICSEARCH_PROTOCOL", "http")
+es_host = os.getenv("ELASTICSEARCH_HOST", "localhost")
+es_port = os.getenv("ELASTICSEARCH_PORT", "9200")
+es_url = f"{es_protocol}://{es_host}:{es_port}"
+
+es = Elasticsearch([es_url])
 
 def index_document(document_id: str, metadata: dict):
     try:

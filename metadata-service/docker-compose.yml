@@ -3,7 +3,13 @@ services:
   ingestion-service:
     build: ./ingestion-service
     ports:
-      - "5000:5000"
+      - "5001:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     environment:
       - RABBITMQ_HOST=rabbitmq
       - METADATA_SERVICE_URL=http://metadata-service:5001
@@ -14,7 +20,13 @@ services:
   metadata-service:
     build: ./metadata-service
     ports:
-      - "5001:5001"
+      - "5002:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     environment:
       - RABBITMQ_HOST=rabbitmq
       - MONGODB_URI=mongodb://mongo:27017/

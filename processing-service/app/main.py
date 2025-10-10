@@ -2,8 +2,22 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from services.text_extraction import extract_text_from_pdf
 from services.thumbnail_generation import generate_thumbnail
+import datetime
 
 app = FastAPI()
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancing"""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "processing-service",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "version": "1.0.0"
+        }
+    )
 
 @app.post("/extract-text")
 async def extract_text(file_path: str):
