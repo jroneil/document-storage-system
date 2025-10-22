@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     bulkUploadFormData.append('file', file);
 
     // Get the bulk upload service URL from environment
-    const bulkUploadServiceHost = process.env.BULK_UPLOAD_SERVICE_HOST || 'http://localhost:5004';
+    const bulkUploadServiceHost = process.env.BULK_UPLOAD_SERVICE_HOST || 'http://localhost:5008';
     
     // Forward the request to the bulk upload service with timeout
     const controller = new AbortController();

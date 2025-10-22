@@ -17,95 +17,161 @@ logger = logging.getLogger(__name__)
 
 def handle_metadata_uploaded_event(ch, method, properties, body):
     """Handle metadata_uploaded events from the message queue"""
+    job_id = 'unknown_job'
+    source_file = 'unknown_file'
     try:
         payload = json.loads(body)
-        logger.info(f"Received metadata_uploaded event: {payload}")
+        job_id = payload.get('job_id', 'unknown_job')
+        source_file = payload.get('source_file', 'unknown_file')
+        logger.info(f"Received metadata_uploaded event for job {job_id}, source {source_file}")
         
         # Log detailed metadata information
-        logger.info(f"Raw metadata from queue: {json.dumps(payload, indent=2, default=str)}")
+        logger.debug(f"Raw metadata from queue: {json.dumps(payload, indent=2, default=str)}")
         
-        # Validate and transform the metadata
-        document_metadata = transform_metadata(payload)
-        
-        # Log transformed metadata before saving
-        logger.info(f"Transformed metadata ready for database: {json.dumps(document_metadata, indent=2, default=str)}")
-        
-        # Save to database
-        save_document_metadata(document_metadata)
-        
-        logger.info(f"Successfully saved document metadata for document_id: {document_metadata['document_id']}")
-        
-    except Exception as e:
-        logger.error(f"Failed to handle metadata_uploaded event: {str(e)}")
-        logger.error(f"Failed payload: {body.decode() if body else 'No body'}")
-        # Re-queue the message for retry
-        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        # Determine if this is a batch message or a single record message
+        if 'records' in payload and isinstance(payload['records'], list):
+            # This is a batch message from bulk-upload-service
+            records_to_transform = payload['records']
+        else:
+            # This is a single record message (e.g., from storage-service)
+            records_to_transform = [payload]
+            logger.debug(f"Interpreting message as a single record for job {job_id}.")
 
-def transform_metadata(raw_metadata: dict) -> dict:
-    """Transform raw metadata from message queue to database format"""
-    try:
-        # Extract metadata from the message structure
-        # The storage service sends: {"event_type": "document_uploaded", "file_path": "...", "metadata": {...}}
-        metadata = raw_metadata.get('metadata', {})
-        file_path = raw_metadata.get('file_path', '')
-        
-        # Generate document_id if not provided
-        document_id = metadata.get('document_id')
-        if not document_id:
-            document_id = str(uuid.uuid4())
-        
-        # Ensure document_id is properly formatted as UUID string
-        try:
-            # Try to parse as UUID to validate format
-            uuid.UUID(document_id)
-        except ValueError:
-            # If invalid, generate a new UUID
-            document_id = str(uuid.uuid4())
-        
-        # Get current timestamp for upload and modification dates
-        current_time = datetime.now()
-        
-        # Transform the metadata to match the database schema
-        transformed_metadata = {
-            'document_id': document_id,
-            'file_name': metadata.get('original_filename', ''),
-            'file_size': metadata.get('file_size', 0),
-            'file_type': metadata.get('content_type', ''),
-            'upload_date': metadata.get('upload_timestamp', current_time),
-            'last_modified_date': metadata.get('upload_timestamp', current_time),
-            'user_id': metadata.get('user_id', str(uuid.uuid4())),  # Default user if not provided
-            'tags': metadata.get('tags', []),
-            'description': metadata.get('description', ''),
-            'storage_path': file_path,
-            'version': metadata.get('version', 1),
-            'checksum': metadata.get('checksum', ''),
-            'acl': metadata.get('acl', {}),
-            'thumbnail_path': metadata.get('thumbnail_path', ''),
-            'expiration_date': metadata.get('expiration_date'),
-            'category': metadata.get('category'),
-            'division': metadata.get('division'),
-            'business_unit': metadata.get('business_unit'),
-            'brand_id': metadata.get('brand_id'),
-            'document_type': metadata.get('doc_type', 'Document')
+        # Transform the records (transform_metadata expects a dict with a 'records' key)
+        # We create a temporary dict that matches the expected structure for transform_metadata
+        temp_payload_for_transformation = {
+            "job_id": job_id,
+            "source_file": source_file,
+            "source": payload.get('source', 'unknown'), # Preserve original source if available
+            "idempotency_key": payload.get('idempotency_key'), # Preserve original idempotency_key
+            "transaction_type": payload.get('transaction_type', 'new'), # Preserve original transaction_type
+            "bucket": payload.get('bucket', 'documents'), # Preserve original bucket
+            "records": records_to_transform
         }
         
-        return transformed_metadata
+        transformed_records = transform_metadata(temp_payload_for_transformation)
+        
+        if not transformed_records:
+            logger.warning(f"No records to save for job {job_id}, source {source_file} after transformation.")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        # Log transformed metadata before saving
+        logger.debug(f"Transformed {len(transformed_records)} records ready for database for job {job_id}.")
+        
+        # Save each record to the database
+        for record in transformed_records:
+            # Log transformed record before saving
+            logger.debug(f"Saving record: {json.dumps(record, indent=2, default=str)}")
+            save_document_metadata(record)
+            logger.info(f"Successfully saved document metadata for document_title: {record.get('document_title')}, revision: {record.get('revision')}")
+        
+        logger.info(f"Successfully processed and saved {len(transformed_records)} records from job {job_id}.")
+        ch.basic_ack(delivery_tag=method.delivery_tag) # Acknowledge message after successful processing
         
     except Exception as e:
-        logger.error(f"Failed to transform metadata: {str(e)}")
+        logger.error(f"Failed to handle metadata_uploaded event for job {job_id}, source {source_file}: {str(e)}")
+        logger.error(f"Failed payload: {body.decode() if body else 'No body'}")
+        # Re-queue the message for retry
+        if ch and ch.is_open and method: # Ensure channel and method are valid before nacking
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        else:
+            logger.error("Channel or method is not available for NACK, message may be lost or require manual intervention.")
+
+def transform_metadata(raw_metadata: dict) -> list:
+    """Transform raw metadata from message queue to database format.
+    Handles batch messages from bulk-upload-service.
+    """
+    try:
+        transformed_records = []
+        source_file = raw_metadata.get('source_file', 'unknown')
+        job_id = raw_metadata.get('job_id')
+        source = raw_metadata.get('source', 'unknown')
+        idempotency_key_header = raw_metadata.get('idempotency_key') # For the batch itself
+
+        # The actual records are in a 'records' list for bulk uploads
+        raw_records = raw_metadata.get('records', [])
+
+        if not raw_records:
+            logger.warning(f"No records found in message from job {job_id}, source {source_file}")
+            return []
+
+        for record in raw_records:
+            # Generate a unique idempotency key for each record if not already present
+            # This can be a combination of the batch idempotency_key and the record_id
+            record_idempotency_key = record.get('idempotency_key', f"{idempotency_key_header}_{record.get('record_id')}")
+            
+            # Map from canonical schema (ParseRecords.md) to database schema (docUpload.md)
+            asset = record.get('asset', {})
+            ownership = record.get('ownership', {})
+            metadata_fields = record.get('metadata', {}) # Renamed to avoid conflict with 'metadata' variable
+
+            transformed_record = {
+                'idempotency_key': record_idempotency_key,
+                'transaction_type': raw_metadata.get('transaction_type', 'new'), # Inherit from batch or default
+                'brand': metadata_fields.get('brand_id'),
+                'business_unit': metadata_fields.get('business_unit'),
+                'document_title': asset.get('file_name'),
+                'revision': str(asset.get('version')), # Ensure revision is a string as per doc
+                'bucket': raw_metadata.get('bucket', 'documents'),
+                'object_key': asset.get('storage_path'),
+                'content_type': asset.get('file_type'),
+                'size_bytes': asset.get('file_size'),
+                'checksum': asset.get('checksum'),
+                'uploader_id': ownership.get('uploader_user_id'),
+                'upload_timestamp': record.get('source', {}).get('job_id'), # Using job_id as a proxy for now, or use current time
+                'tags': metadata_fields.get('tags'),
+                'description': metadata_fields.get('description'),
+                'category': metadata_fields.get('category'),
+                'division': metadata_fields.get('division'),
+                'document_type': metadata_fields.get('document_type'),
+                'region': metadata_fields.get('region'),
+                'country': metadata_fields.get('country'),
+                'languages': metadata_fields.get('languages'),
+                'alternate_part_numbers': metadata_fields.get('alternate_part_numbers'),
+                'thumbnail_path': asset.get('thumbnail_path'),
+                'expiration_date': asset.get('expiration_date'),
+                'acl': ownership.get('acl')
+            }
+            # Ensure uploader_id is a string
+            if transformed_record['uploader_id'] is None:
+                transformed_record['uploader_id'] = 'system'
+
+            # Ensure upload_timestamp is a valid datetime string
+            if not isinstance(transformed_record['upload_timestamp'], datetime):
+                 transformed_record['upload_timestamp'] = datetime.now()
+
+
+            transformed_records.append(transformed_record)
+        
+        logger.info(f"Transformed {len(transformed_records)} records from job {job_id}, source {source_file}")
+        return transformed_records
+
+    except Exception as e:
+        logger.error(f"Failed to transform metadata batch: {str(e)}")
+        logger.error(f"Failed raw_metadata: {json.dumps(raw_metadata, indent=2, default=str)}")
         raise
 
-def run_event_listener():
-    """Run the event listener in a separate thread"""
-    logger.info("Starting metadata event listener...")
-    listen_for_events("document_upload_queue", handle_metadata_uploaded_event)
+def run_single_upload_listener():
+    """Run the single upload event listener in a separate thread"""
+    logger.info("Starting single upload event listener...")
+    listen_for_events("single-upload.queue", handle_metadata_uploaded_event)
+
+def run_bulk_upload_listener():
+    """Run the bulk upload event listener in a separate thread"""
+    logger.info("Starting bulk upload event listener...")
+    listen_for_events("bulk-upload.queue", handle_metadata_uploaded_event)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Start event listener in background thread
-    listener_thread = threading.Thread(target=run_event_listener, daemon=True)
-    listener_thread.start()
-    logger.info("Metadata event listener started")
+    # Startup: Start both event listeners in background threads
+    single_upload_thread = threading.Thread(target=run_single_upload_listener, daemon=True)
+    bulk_upload_thread = threading.Thread(target=run_bulk_upload_listener, daemon=True)
+    
+    single_upload_thread.start()
+    bulk_upload_thread.start()
+    
+    logger.info("Both single and bulk upload event listeners started")
     yield
     # Shutdown: Clean up if needed
     logger.info("Shutting down metadata service")

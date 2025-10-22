@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.services.file_upload import handle_file_upload
 from app.services.metadata_parser import MetadataParser
-from app.services.message_queue import publish_event
+from app.services.message_queue import publish_bulk_upload_message
 import datetime
 import uuid
 import logging
@@ -15,7 +15,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3002"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,7 +54,7 @@ async def bulk_upload(file: UploadFile = File(...)):
         batch_result = parser.parse_file(file_path, job_id)
 
         # Step 3: Send batch message to the message queue
-        publish_event("bulk_metadata_upload", batch_result)
+        publish_bulk_upload_message(batch_result)
 
         # Return job information
         return JSONResponse(
