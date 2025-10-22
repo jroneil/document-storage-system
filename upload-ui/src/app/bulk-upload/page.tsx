@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, DragEvent } from 'react';
+import { formatFileSize, validateFile } from '../../../lib/utils';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -10,15 +11,6 @@ export default function Home() {
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setMessage('');
-      setError('');
-    }
-  };
 
   const handleDrag = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -30,28 +22,8 @@ export default function Home() {
     }
   };
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-      setMessage('');
-      setError('');
-    }
-  };
-
   const handleButtonClick = () => {
     inputRef.current?.click();
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   const getFileIcon = (fileName: string) => {
@@ -100,6 +72,42 @@ export default function Home() {
     }
   };
 
+  const validateFileType = (file: File): boolean => {
+    const allowedExtensions = ['csv', 'json', 'xml', 'xlsx', 'xls'];
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    return fileExtension ? allowedExtensions.includes(fileExtension) : false;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (!validateFileType(selectedFile)) {
+        setError(`Unsupported file type. Allowed types: CSV, JSON, XML, Excel`);
+        return;
+      }
+      setFile(selectedFile);
+      setMessage('');
+      setError('');
+    }
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const droppedFile = e.dataTransfer.files[0];
+      if (!validateFileType(droppedFile)) {
+        setError(`Unsupported file type. Allowed types: CSV, JSON, XML, Excel`);
+        return;
+      }
+      setFile(droppedFile);
+      setMessage('');
+      setError('');
+    }
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -127,9 +135,9 @@ export default function Home() {
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('Uploading file:', file.name);
+      console.log('Uploading bulk file:', file.name);
 
-      const response = await fetch('http://localhost:5000/bulk-upload', {
+      const response = await fetch('/api/bulk-upload', {
         method: 'POST',
         body: formData,
       });
@@ -143,12 +151,24 @@ export default function Home() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
+        throw new Error(`Bulk upload failed: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
       console.log('Success response:', data);
-      setMessage(data.message || 'File uploaded successfully!');
+      
+      let successMessage = data.message || 'Bulk upload processing started!';
+      if (data.records_processed !== undefined) {
+        successMessage += ` Processed ${data.records_processed} records.`;
+      }
+      if (data.validation_errors && data.validation_errors > 0) {
+        successMessage += ` ${data.validation_errors} validation errors found.`;
+      }
+      if (data.job_id) {
+        successMessage += ` Job ID: ${data.job_id}`;
+      }
+      
+      setMessage(successMessage);
 
       // Clear file after successful upload
       setTimeout(() => {
@@ -157,12 +177,12 @@ export default function Home() {
         if (inputRef.current) {
           inputRef.current.value = '';
         }
-      }, 2000);
+      }, 3000);
     } catch (err) {
       clearInterval(progressInterval);
       setUploadProgress(0);
-      console.error('Upload error:', err);
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      console.error('Bulk upload error:', err);
+      setError(err instanceof Error ? err.message : 'Bulk upload failed');
     } finally {
       setTimeout(() => {
         setUploading(false);
@@ -194,7 +214,7 @@ export default function Home() {
           </h1>
         
           <p className="text-sm text-gray-600">
-            Upload your files for bulk processing
+            Upload CSV, JSON, XML, or Excel files for bulk metadata processing
           </p>
         </div>
 
@@ -361,7 +381,7 @@ export default function Home() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
       <span>
-        Connected to: <code className="text-blue-600 font-mono">localhost:5000</code>
+        Connected to: <code className="text-blue-600 font-mono">Internal API</code>
       </span>
     </div>
   </div>

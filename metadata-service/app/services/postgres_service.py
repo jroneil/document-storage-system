@@ -1,12 +1,19 @@
 import psycopg2
+import json
+import logging
 from app.models.document import DocumentMetadata
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 def save_document_metadata(document_metadata: dict):
     try:
+        logger.info(f"Attempting to save document metadata to database: {document_metadata['document_id']}")
+        
         connection = psycopg2.connect(
             host=os.getenv("POSTGRES_HOST"),
             database=os.getenv("POSTGRES_DB"),
@@ -22,6 +29,9 @@ def save_document_metadata(document_metadata: dict):
             expiration_date, category, division, business_unit, brand_id, document_type
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
+        
+        logger.info(f"Executing database query for document: {document_metadata['document_id']}")
+        
         cursor.execute(query, (
             document_metadata["document_id"], document_metadata["file_name"], document_metadata["file_size"],
             document_metadata["file_type"], document_metadata["upload_date"], document_metadata["last_modified_date"],
@@ -35,8 +45,12 @@ def save_document_metadata(document_metadata: dict):
         connection.commit()
         cursor.close()
         connection.close()
+        
+        logger.info(f"Successfully saved document metadata to database: {document_metadata['document_id']}")
         return True
     except Exception as e:
+        logger.error(f"Failed to save document metadata: {str(e)}")
+        logger.error(f"Document metadata that failed: {json.dumps(document_metadata, indent=2, default=str)}")
         raise Exception(f"Failed to save document metadata: {str(e)}")
 
 def delete_document_metadata(document_id: str):

@@ -1,10 +1,10 @@
-from datetime import time
+import time
 import pika
 import json
 import os
 import logging
 from dotenv import load_dotenv
-from app.rabbitmq_utils import get_rabbitmq_connection
+from ..rabbitmq_utils import get_rabbitmq_connection
 
 load_dotenv()
 
@@ -12,30 +12,31 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-def listen_for_events(event_type: str, callback):
+def listen_for_events(queue_name: str, callback):
+    """Listen for events on the specified queue and process them with the callback function"""
     while True:  # Add reconnection loop
         try:
             connection = get_rabbitmq_connection()
             channel = connection.channel()
             
-            logger.info(f"Declaring queue: {event_type}")
-            channel.queue_declare(queue=event_type, durable=True)
+            logger.info(f"Declaring queue: {queue_name}")
+            channel.queue_declare(queue=queue_name, durable=True)
             
             # Set QoS
             channel.basic_qos(prefetch_count=1)
 
             def on_message(ch, method, properties, body):
                 try:
-                    logger.info(f"Received message on {event_type}: {body.decode()}")
+                    logger.info(f"Received message on {queue_name}: {body.decode()}")
                     callback(ch, method, properties, body)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as callback_exception:
                     logger.error(f"Error processing message: {callback_exception}")
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
 
-            channel.basic_consume(queue=event_type, on_message_callback=on_message)
+            channel.basic_consume(queue=queue_name, on_message_callback=on_message)
             
-            logger.info(f"Starting to consume messages from {event_type}...")
+            logger.info(f"Starting to consume messages from {queue_name}...")
             channel.start_consuming()
             
         except pika.exceptions.AMQPConnectionError as connection_error:
