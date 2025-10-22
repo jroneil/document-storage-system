@@ -3,10 +3,15 @@ Database migration script to create user and project tables.
 Run this script to initialize the user-project structure in PostgreSQL.
 """
 
-from sqlalchemy import create_engine
-from app.models.postgres_models import Base
 import os
+import sys
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
+
+# Add the parent directory to Python path to allow imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from app.models.postgres_models import Base
 
 # Load environment variables
 load_dotenv()
@@ -14,7 +19,7 @@ load_dotenv()
 # Database connection
 DATABASE_URL = os.getenv(
     "POSTGRES_URL",
-    "postgresql://postgres:postgres@localhost:5432/metadata_db"
+    "postgresql://admin:password@localhost:5432/document_storage"
 )
 
 def create_tables():

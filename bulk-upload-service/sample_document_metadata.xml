@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<records>
+  <record>
+    <transaction_type>new</transaction_type>
+    <file_name>technical_manual_v1.pdf</file_name>
+    <file_size>5242880</file_size>
+    <file_type>application/pdf</file_type>
+    <user_id>user-001</user_id>
+    <tags>technical,manual,engineering</tags>
+    <description>Technical manual for product X</description>
+    <storage_path>/documents/tech/manual_v1.pdf</storage_path>
+    <version>1</version>
+    <checksum>abc123def456</checksum>
+    <acl>{"read": ["user-001", "user-002"], "write": ["user-001"]}</acl>
+    <thumbnail_path>/thumbnails/tech_manual_v1.jpg</thumbnail_path>
+    <expiration_date>2026-12-31</expiration_date>
+    <category>Technical Documentation</category>
+    <division>Engineering</division>
+    <business_unit>Product Development</business_unit>
+    <brand_id>brand-001</brand_id>
+    <document_type>Manual</document_type>
+    <region>EMEA</region>
+    <country>Germany</country>
+    <languages>en,de</languages>
+    <alternate_part_numbers>PN-001-A,PN-001-B</alternate_part_numbers>
+  </record>
+  <record>
+    <transaction_type>new</transaction_type>
+    <file_name>marketing_brochure.pdf</file_name>
+    <file_size>2097152</file_size>
+    <file_type>application/pdf</file_type>
+    <user_id>user-002</user_id>
+    <tags>marketing,sales,brochure</tags>
+    <description>Marketing brochure for product launch</description>
+    <storage_path>/documents/marketing/brochure.pdf</storage_path>
+    <version>1</version>
+    <checksum>def456ghi789</checksum>
+    <acl>{"read": ["user-002", "user-003"], "write": ["user-002"]}</acl>
+    <thumbnail_path>/thumbnails/marketing_brochure.jpg</thumbnail_path>
+    <expiration_date>2025-06-30</expiration_date>
+    <category>Marketing Materials</category>
+    <division>Marketing</division>
+    <business_unit>Sales</business_unit>
+    <brand_id>brand-002</brand_id>
+    <document_type>Brochure</document_type>
+    <region>NA</region>
+    <country>USA</country>
+    <languages>en,es</languages>
+    <alternate_part_numbers>PN-002-A</alternate_part_numbers>
+  </record>
+</records>

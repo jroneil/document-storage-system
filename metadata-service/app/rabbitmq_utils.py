@@ -12,8 +12,8 @@ def get_rabbitmq_connection():
     """Create a RabbitMQ connection that works in both local and Docker environments"""
     try:
         # Get environment variables with fallbacks
-        rabbitmq_user = os.getenv("RABBITMQ_USER", "guest")
-        rabbitmq_password = os.getenv("RABBITMQ_PASSWORD", "guest")
+        rabbitmq_user = os.getenv("RABBITMQ_USER", "admin")
+        rabbitmq_password = os.getenv("RABBITMQ_PASSWORD", "password")
         
         # Try Docker host first, then localhost if that fails
         hosts_to_try = [

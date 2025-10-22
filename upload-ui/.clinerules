@@ -1,0 +1,248 @@
+content = """# Next.js App Router - Cline Rules
+
+## Project Structure
+- Use Next.js App Router (not Pages Router)
+- Organize files as follows:
+  - `/app` - All routes and layouts
+  - `/lib` - Server-side utilities, functions, and business logic
+  - `/components` - React components
+    - `/components/ui` - Reusable UI components
+    - `/components/features` - Feature-specific components
+  - `/types` - Shared TypeScript type definitions
+  - `/actions` - Server Actions
+  - `/public` - Static assets
+
+## TypeScript
+- Use TypeScript for all files
+- Enable strict mode in tsconfig.json
+- Create type definitions in `/types` directory
+- Use proper typing for all functions, props, and API responses
+- Avoid `any` type - use `unknown` if type is truly unknown
+- Export types alongside components when needed
+
+## React & Next.js Patterns
+- All components are Server Components by default
+- Only add `'use client'` directive when component needs:
+  - Browser APIs (window, document, etc.)
+  - Event handlers (onClick, onChange, etc.)
+  - React hooks (useState, useEffect, etc.)
+  - Context providers/consumers
+- Use React Server Components for data fetching when possible
+- Implement proper loading.tsx and error.tsx files for routes
+- Use Suspense boundaries for streaming and loading states
+
+## API & Data Fetching
+- All API calls must be server-side
+- Store API server URL in environment variables (.env.local)
+- Use descriptive env variable names (e.g., API_BASE_URL, NEXT_PUBLIC_API_URL)
+- Never expose sensitive API keys to the client
+- Use `NEXT_PUBLIC_` prefix only for client-accessible env vars
+- Implement data fetching in Server Components or Server Actions
+- Use Next.js fetch with appropriate caching strategies:
+  - Static data: `{ cache: 'force-cache' }`
+  - Dynamic data: `{ cache: 'no-store' }`
+  - ISR with revalidation: `{ next: { revalidate: 3600 } }`
+
+## Server-Side Functions
+- Place all server-side utilities in `/lib` directory
+- Mark server-only code with `import 'server-only'` at the top
+- Create separate files for different concerns:
+  - `/lib/api.ts` - API client functions
+  - `/lib/db.ts` - Database operations
+  - `/lib/auth.ts` - Authentication utilities
+  - `/lib/utils.ts` - General utilities
+- Use Server Actions for mutations (create, update, delete)
+- Validate all inputs in Server Actions using Zod or similar
+
+## Styling with Tailwind CSS
+- Use Tailwind CSS v4+ configuration
+- Follow Tailwind's utility-first approach
+- Use CSS variables for theme customization
+- Organize custom styles in `/app/globals.css`
+- Use `cn()` utility for conditional classes (clsx + tailwind-merge)
+- Prefer Tailwind utilities over custom CSS
+- Use Tailwind's responsive prefixes (sm:, md:, lg:, xl:, 2xl:)
+- Leverage Tailwind's dark mode with `dark:` prefix
+
+## Environment Variables
+- Store all configuration in environment variables
+- Create `.env.local` for local development (git-ignored)
+- Create `.env.example` with dummy values for documentation
+- Validate environment variables on application startup
+- Use a validation schema (Zod recommended)
+- Access env vars through `process.env.VARIABLE_NAME`
+- Example validation:
+  const envSchema = z.object({
+    API_BASE_URL: z.string().url(),
+    DATABASE_URL: z.string(),
+  });
+
+## Error Handling
+- Implement error.tsx files at appropriate route levels
+- Use Error Boundaries for client component errors
+- Create custom error classes for different error types
+- Log errors appropriately (server-side only)
+- Return user-friendly error messages
+- Handle API errors consistently:
+  try {
+    // API call
+  } catch (error) {
+    console.error('Error:', error);
+    throw new Error('User-friendly message');
+  }
+
+## Type Safety & Validation
+- Define API response types in `/types`
+- Use Zod for runtime validation of:
+  - API responses
+  - Form inputs
+  - Environment variables
+  - Server Action inputs
+- Create reusable validation schemas
+- Validate data at system boundaries (API, forms, etc.)
+
+## Performance Optimization
+- Use `next/image` for all images with proper sizing
+- Use `next/font` for font optimization
+- Implement dynamic imports for heavy components:
+  const HeavyComponent = dynamic(() => import('./HeavyComponent'))
+- Use React.memo() sparingly and only when needed
+- Implement proper loading states with Suspense
+- Optimize bundle size by checking imports
+
+## SEO & Metadata
+- Use Next.js Metadata API for all pages
+- Implement generateMetadata() for dynamic pages
+- Include proper Open Graph and Twitter Card tags
+- Use semantic HTML elements
+- Implement proper heading hierarchy (h1, h2, h3, etc.)
+
+## Security Best Practices
+- Validate all environment variables on startup
+- Sanitize user inputs before processing
+- Use Server Actions with proper validation for mutations
+- Implement rate limiting for API routes if needed
+- Never expose sensitive data to client components
+- Use HTTPS in production
+- Implement proper CORS policies
+- Use Content Security Policy headers
+
+## Code Quality & Conventions
+- Use ESLint with Next.js recommended config
+- Use Prettier for code formatting
+- Follow naming conventions:
+  - PascalCase for components (UserProfile.tsx)
+  - camelCase for functions and variables
+  - UPPER_SNAKE_CASE for constants
+  - kebab-case for file names in `/app` routes
+- Write descriptive variable and function names
+- Add JSDoc comments for complex functions
+- Keep components small and focused (Single Responsibility)
+- Extract reusable logic into custom hooks or utilities
+
+## File Naming
+- Components: PascalCase (Button.tsx, UserCard.tsx)
+- Utilities: camelCase (formatDate.ts, apiClient.ts)
+- Routes: lowercase with hyphens (user-profile, api/users)
+- Types: PascalCase (User.ts, ApiResponse.ts)
+
+## Git & Version Control
+- Keep `.env.local` in .gitignore
+- Commit `.env.example` with dummy values
+- Keep commits focused and atomic
+
+## Testing Considerations
+- Structure code to be testable
+- Separate business logic from UI components
+- Mock external dependencies in tests
+- Test Server Actions independently
+
+## Accessibility
+- Use semantic HTML elements
+- Include proper ARIA labels when needed
+- Ensure keyboard navigation works
+- Maintain proper color contrast ratios
+- Test with screen readers when possible
+
+## Comments & Documentation
+- Write self-documenting code with clear names
+- Add comments for complex business logic
+- Document non-obvious decisions
+- Keep README.md updated with setup instructions
+- Document environment variables in .env.example
+
+## Server Actions Best Practices
+- Place Server Actions in `/actions` directory
+- Always use `'use server'` directive
+- Validate inputs with Zod
+- Return serializable data only
+- Handle errors gracefully
+- Use revalidatePath() or revalidateTag() after mutations
+- Example structure:
+  'use server'
+  
+  import { z } from 'zod'
+  import { revalidatePath } from 'next/cache'
+  
+  const schema = z.object({
+    name: z.string().min(1),
+  })
+  
+  export async function createUser(formData: FormData) {
+    const validated = schema.parse({
+      name: formData.get('name'),
+    })
+    
+    // Perform action
+    
+    revalidatePath('/users')
+    return { success: true }
+  }
+
+## API Route Handlers (when needed)
+- Use Route Handlers in `/app/api` only when necessary
+- Prefer Server Actions for mutations
+- Use for webhooks, third-party integrations, or public APIs
+- Return proper HTTP status codes
+- Implement proper error handling
+- Use TypeScript for request/response types
+
+## State Management
+- Use Server Components and Server Actions when possible
+- Use React Context for client-side global state (sparingly)
+- Consider Zustand or Jotai for complex client state
+- Avoid prop drilling - use composition or context
+- Keep state as local as possible
+
+## Forms
+- Use Server Actions for form submissions
+- Implement proper validation (client + server)
+- Show loading states during submission
+- Display validation errors clearly
+- Use progressive enhancement when possible
+- Consider using react-hook-form for complex forms
+
+## Database (if applicable)
+- Use Prisma or Drizzle ORM for type safety
+- Keep database queries in `/lib/db.ts`
+- Use connection pooling
+- Implement proper error handling
+- Use transactions for related operations
+- Never expose database credentials to client
+
+## Deployment
+- Set environment variables in deployment platform
+- Enable TypeScript strict mode
+- Run type checking in CI/CD
+- Test production build locally before deploying
+- Use proper caching headers
+- Monitor performance and errors in production
+"""
+
+# Save as .clinerules file
+with open('.clinerules', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("✅ .clinerules file created successfully!")
+print("📁 Download and place it in your Next.js project root directory.")
+print("\n✨ Code examples are now formatted as plain text and will copy correctly!")
