@@ -1,5 +1,8 @@
 CREATE TABLE documents (
-    document_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    revision INTEGER NOT NULL DEFAULT 1,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     file_name TEXT NOT NULL,
     file_size BIGINT NOT NULL,
     file_type TEXT NOT NULL, -- File format (e.g., PDF, HTML, Video, DOC, Excel)
@@ -18,7 +21,8 @@ CREATE TABLE documents (
     division TEXT,
     business_unit TEXT,
     brand_id UUID,
-    document_type TEXT NOT NULL -- Document type (e.g., Technical, User, etc.)
+    document_type TEXT NOT NULL, -- Document type (e.g., Technical, User, etc.)
+    CONSTRAINT uq_document_revision UNIQUE (document_id, revision)
 );
 
 -- Indexes for faster querying
@@ -31,3 +35,5 @@ CREATE INDEX idx_document_business_unit ON documents (business_unit);
 CREATE INDEX idx_document_brand ON documents (brand_id);
 CREATE INDEX idx_document_file_type ON documents (file_type);
 CREATE INDEX idx_document_document_type ON documents (document_type);
+CREATE INDEX idx_document_latest_active ON documents (document_id, revision DESC)
+    WHERE is_deleted = FALSE;

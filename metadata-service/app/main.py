@@ -1,15 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-import asyncio
 import threading
 import json
 import logging
+import uuid
+from datetime import datetime, timezone
+
+from app.api import documents as documents_router
 from app.services.message_queue import listen_for_events
 from app.services.postgres_service import save_document_metadata
-from app.models.document import DocumentMetadata
-import uuid
-from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -63,7 +63,7 @@ def transform_metadata(raw_metadata: dict) -> dict:
             document_id = str(uuid.uuid4())
         
         # Get current timestamp for upload and modification dates
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
         
         # Transform the metadata to match the database schema
         transformed_metadata = {
@@ -111,6 +111,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down metadata service")
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(documents_router.router)
 
 @app.get("/health")
 async def health_check():
