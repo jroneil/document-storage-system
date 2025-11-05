@@ -1,4 +1,16 @@
-from sqlalchemy import Column, Integer, String, JSON, BigInteger, DateTime, ForeignKey, Index, func
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    JSON,
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Index,
+    UniqueConstraint,
+    Boolean,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -22,8 +34,11 @@ class Brand(Base):
 
 class Document(Base):
     __tablename__ = "documents"
-    
-    document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    revision = Column(Integer, nullable=False, default=1)
+    is_deleted = Column(Boolean, nullable=False, default=False)
     file_name = Column(String, nullable=False)
     file_size = Column(BigInteger, nullable=False)
     file_type = Column(String, nullable=False)
@@ -45,6 +60,7 @@ class Document(Base):
     document_type = Column(String, nullable=False)
 
     __table_args__ = (
+        UniqueConstraint('document_id', 'revision', name='uq_document_revision'),
         Index('idx_document_user', 'user_id'),
         Index('idx_document_tags', 'tags', postgresql_using='gin'),
         Index('idx_document_upload_date', 'upload_date'),
